@@ -23,7 +23,7 @@ pub struct Response {
     pub local_timezone: Option<String>,
     pub total_snow_orediction: Option<f64>,
     pub hazzards: Option<Vec<Hazzards>>,
-    pub forecast_days: Option<HashMap<String, Forecast>>,
+    pub forecast_days: HashMap<String, Forecast>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -82,6 +82,10 @@ fn main() {
 
     println!("{}, {}", city, state);
     println!("{}", url);
-    println!("{:?}", json);
+
+    for (day, forecast) in json.forecast_days.into_iter() {
+        println!("{} - {:?}", day, forecast.snow.expect("yeah the value isnt a float"));
+    }
+
 
 }
