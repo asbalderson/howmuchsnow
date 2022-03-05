@@ -3,10 +3,9 @@ extern crate serde_json;
 extern crate serde;
 extern crate reqwest;
 
-use clap::{Arg, App, value_t_or_exit};
+use clap::{Arg, Command, ArgMatches};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // https://blog.logrocket.com/making-http-requests-rust-reqwest/
 // https://howmuchwillitsnow.com/rest/forecast/fort-collins/co
@@ -19,11 +18,12 @@ pub struct Response {
     pub current_temp: Option<i64>,
     pub reference_datetime: Option<String>,
     pub data_creation_datetime: Option<String>,
-    pub ianaTimeZone: Option<String>,
+    #[serde(rename = "ianaTimeZone")]
+    pub iana_time_zone: Option<String>,
     pub local_timezone: Option<String>,
     pub total_snow_orediction: Option<f64>,
     pub hazzards: Option<Vec<Hazzards>>,
-    pub forecast_days: HashMap<String, Forecast>,
+    pub forecast_days: BTreeMap<String, Forecast>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -51,18 +51,18 @@ pub struct Event {
     pub time: Option<String>,
 }
 
-fn get_parser() -> App<'static> {
-     App::new("how-much-snow")
+fn get_parser() -> Command<'static> {
+     Command::new("how-much-snow")
     .version("0.1.0")
     .author("Alex Balderson")
     .about("Show how much snow will fall over the next 7 days for a US City")
     .arg(
-        Arg::with_name("city")
+        Arg::new("city")
             .value_name("city")
             .takes_value(true)
     )
     .arg(
-        Arg::with_name("state")
+        Arg::new("state")
         .value_name("state")
         .takes_value(true)
     )
@@ -71,20 +71,21 @@ fn get_parser() -> App<'static> {
 fn main() {
     let args = get_parser().get_matches();
 
-    let city: String = value_t_or_exit!(args, "city", String);
-    let state: String = value_t_or_exit!(args, "state", String);
+    let city: String = ArgMatches::value_of_t_or_exit(&args, "city");
+    let state: String = ArgMatches::value_of_t_or_exit(&args, "state");
 
     let url: String = format!("https://howmuchwillitsnow.com/rest/forecast/{}/{}", city, state);
 
-    let mut response = reqwest::blocking::get(&url).expect("failed to query data");
+    let response = reqwest::blocking::get(&url).expect("failed to query data");
 
     let json: Response = serde_json::from_str(&response.text().expect("failed to get text from data")).expect("yeah it died");
 
-    println!("{}, {}", city, state);
-    println!("{}", url);
-
     for (day, forecast) in json.forecast_days.into_iter() {
-        println!("{} - {:?}", day, forecast.snow.expect("yeah the value isnt a float"));
+        let snow: f64 = match forecast.snow {
+            Some(inches) => inches,
+            None => 0.0f64,
+        };
+        println!("{} - {:.3}", day, snow);
     }
 
 
