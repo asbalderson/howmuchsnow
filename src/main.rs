@@ -1,9 +1,9 @@
 extern crate clap;
-extern crate serde_json;
-extern crate serde;
 extern crate reqwest;
+extern crate serde;
+extern crate serde_json;
 
-use clap::{Arg, Command, ArgMatches};
+use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -12,6 +12,21 @@ use std::collections::BTreeMap;
 // https://transform.tools/json-to-rust-serde
 // https://dev.to/pintuch/rust-serde-json-by-example-2kkf
 // https://docs.rs/serde_json/0.9.10/serde_json/ <- just use serde_json:Value
+
+trait ADefault<'a, U> {
+    fn get_or_default(&'a self, default: &'a U) -> &'a U;
+}
+
+impl<'a, U> ADefault<'a, U> for core::option::Option<U>
+    where U: Copy
+{
+    fn get_or_default(&'a self, default: &'a U) -> &'a U {
+      match self {
+            Some(p) => p,
+            None => &default,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Response {
@@ -41,7 +56,7 @@ pub struct Forecast {
     pub max: Option<i64>,
     pub mint: Option<i64>,
     pub cond: Option<String>,
-    pub events: Option<Vec<Event>>,
+    pub events: Vec<Event>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -52,20 +67,12 @@ pub struct Event {
 }
 
 fn get_parser() -> Command<'static> {
-     Command::new("how-much-snow")
-    .version("0.1.0")
-    .author("Alex Balderson")
-    .about("Show how much snow will fall over the next 7 days for a US City")
-    .arg(
-        Arg::new("city")
-            .value_name("city")
-            .takes_value(true)
-    )
-    .arg(
-        Arg::new("state")
-        .value_name("state")
-        .takes_value(true)
-    )
+    Command::new("how-much-snow")
+        .version("0.1.0")
+        .author("Alex Balderson")
+        .about("Show how much snow will fall over the next 7 days for a US City")
+        .arg(Arg::new("city").value_name("city").takes_value(true))
+        .arg(Arg::new("state").value_name("state").takes_value(true))
 }
 
 fn main() {
@@ -74,19 +81,24 @@ fn main() {
     let city: String = ArgMatches::value_of_t_or_exit(&args, "city");
     let state: String = ArgMatches::value_of_t_or_exit(&args, "state");
 
-    let url: String = format!("https://howmuchwillitsnow.com/rest/forecast/{}/{}", city, state);
+    let url: String = format!(
+        "https://howmuchwillitsnow.com/rest/forecast/{}/{}",
+        city, state
+    );
 
     let response = reqwest::blocking::get(&url).expect("failed to query data");
 
-    let json: Response = serde_json::from_str(&response.text().expect("failed to get text from data")).expect("yeah it died");
+    let json: Response =
+        serde_json::from_str(&response.text().expect("failed to get text from data"))
+            .expect("yeah it died");
+
+    let mut total: f64 = 0.0;
 
     for (day, forecast) in json.forecast_days.into_iter() {
-        let snow: f64 = match forecast.snow {
-            Some(inches) => inches,
-            None => 0.0f64,
-        };
-        println!("{} - {:.3}", day, snow);
+        let snow: &f64 = forecast.snow.get_or_default(&0.0f64);
+        println!("{} - {:.3} inches", day, snow);
+        total += snow;
     }
 
-
+    println!("Total inches - {:.3}", total);
 }
