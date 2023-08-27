@@ -18,10 +18,11 @@ trait ADefault<'a, U> {
 }
 
 impl<'a, U> ADefault<'a, U> for core::option::Option<U>
-    where U: Copy
+where
+    U: Copy,
 {
     fn get_or_default(&'a self, default: &'a U) -> &'a U {
-      match self {
+        match self {
             Some(p) => p,
             None => &default,
         }
