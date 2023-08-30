@@ -43,14 +43,14 @@ Total inches - 0.000
 
 ## Why
 
-The year I purchased my house (a corner lot) we got a bunch of big heavy snows. I found myself wondering both how much snow I could expect to shovel in the comming week and how much snow i actually ended up shoveling that day. I came across [how much will it snow](https://howmuchwillitsnow.com/) to get a good reliable quantities and forecasts and wondered if I could just write a CLI tool to query and post the information. The answer was "yes" and here we are.
+The year I purchased my house (a corner lot) we got a bunch of big heavy snows. I found myself wondering both how much snow I could expect to shovel in the coming week and how much snow i actually ended up shoveling that day. I came across [how much will it snow](https://howmuchwillitsnow.com/) to get a good reliable quantities and forecasts and wondered if I could just write a CLI tool to query and post the information. The answer was "yes" and here we are.
 
 ## TODO
 * ~~Add a Readme~~
 * Add makefile for building/installing
-* Add a function to hyphonate the city name
-* Add a function to convert a full state to it's two character abbrivation
-* Look up a city and state from the zipcode
+* Add a function to hyphenate the city name
+* Add a function to convert a full state to it's two character abbreviation
+* Look up a city and state from the zip code
 * Fix help messages for arguments
 * Add tests
 * Add documentation 
