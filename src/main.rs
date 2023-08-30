@@ -72,8 +72,8 @@ fn get_parser() -> Command<'static> {
         .version("0.1.0")
         .author("Alex Balderson")
         .about("Show how much snow will fall over the next 7 days for a US City")
-        .arg(Arg::new("city").value_name("city").takes_value(true))
-        .arg(Arg::new("state").value_name("state").takes_value(true))
+        .arg(Arg::new("city").value_name("city").takes_value(true).help("Hyphonated name of the city"))
+        .arg(Arg::new("state").value_name("state").takes_value(true).help("Two letter abriviation for the State"))
 }
 
 fn main() {
